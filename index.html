@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRUD com Supabase</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    li {
+      margin: 10px 0;
+    }
+
+    button {
+      margin-left: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>CRUD Simples</h1>
+  <input type="text" id="nameInput" placeholder="Digite um nome">
+  <button onclick="addName()">Adicionar</button>
+  <ul id="nameList"></ul>
+
+  <script>
+    const apiUrl = 'https://ntsgfxctoaiydnrojqnv.supabase.co';
+    const apiKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im50c2dmeGN0b2FpeWRucm9qcW52Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY3MzQ5NjQsImV4cCI6MjA2MjMxMDk2NH0.QqNAc_CQcgHH8eoECYVRsS3AzWGI-yUJoukQn7holXw';
+
+    // Carregar nomes
+    async function loadNames() {
+      const res = await fetch(apiUrl, {
+        headers: {
+          'apikey': apiKey,
+          'Authorization': `Bearer ${apiKey}`
+        }
+      });
+      const names = await res.json();
+      const nameList = document.getElementById('nameList');
+      nameList.innerHTML = '';
+      names.forEach(name => {
+        const li = document.createElement('li');
+        li.textContent = name.name;
+        const editBtn = document.createElement('button');
+        editBtn.textContent = 'Editar';
+        editBtn.onclick = () => editName(name.id, name.name);
+        const deleteBtn = document.createElement('button');
+        deleteBtn.textContent = 'Excluir';
+        deleteBtn.onclick = () => deleteName(name.id);
+        li.appendChild(editBtn);
+        li.appendChild(deleteBtn);
+        nameList.appendChild(li);
+      });
+    }
+
+    // Adicionar nome
+    async function addName() {
+      const name = document.getElementById('nameInput').value;
+      if (name) {
+        await fetch(apiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': apiKey,
+            'Authorization': `Bearer ${apiKey}`
+          },
+          body: JSON.stringify({ name })
+        });
+        document.getElementById('nameInput').value = '';
+        loadNames();
+      }
+    }
+
+    // Editar nome
+    async function editName(id, currentName) {
+      const newName = prompt('Editar nome:', currentName);
+      if (newName) {
+        await fetch(`${apiUrl}?id=eq.${id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': apiKey,
+            'Authorization': `Bearer ${apiKey}`
+          },
+          body: JSON.stringify({ name: newName })
+        });
+        loadNames();
+      }
+    }
+
+    // Excluir nome
+    async function deleteName(id) {
+      await fetch(`${apiUrl}?id=eq.${id}`, {
+        method: 'DELETE',
+        headers: {
+          'apikey': apiKey,
+          'Authorization': `Bearer ${apiKey}`
+        }
+      });
+      loadNames();
+    }
+
+    // Carregar nomes ao iniciar
+    loadNames();
+  </script>
+</body>
+
+</html>
